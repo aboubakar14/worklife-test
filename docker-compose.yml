@@ -1,0 +1,53 @@
+version: '3.9'
+
+services:
+  worklife-test-api:
+    container_name: worklife-test-api
+    depends_on:
+      - worklife-test-db
+    restart: always
+    image: worklife-test:local
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    networks:
+      - technical-backend
+    ports:
+      - "880:80"
+    env_file:
+      - app.env
+      - .env
+    environment:
+      PYTHONPATH: /wl
+    working_dir: /wl
+    volumes:
+      - ./app:/wl/app
+    command: [
+        "uvicorn",
+        "--host", "0.0.0.0",
+        "--port", "80",
+        "--reload-dir", "/wl/app",
+        "--log-level", "debug",
+        "--reload",
+        "app.main:app",
+    ]
+
+  worklife-test-db:
+    container_name: worklife-test-db
+    image: postgres:16
+    volumes:
+      - technical-db-data:/var/lib/postgresql/data/
+      - ./scripts:/scripts/
+    env_file:
+      - ./app.env
+    networks:
+      - technical-backend
+    ports:
+      - "5434:5432"
+
+volumes:
+  technical-db-data:
+
+networks:
+  technical-backend:
+    name: technical-backend
